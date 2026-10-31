@@ -1,0 +1,35 @@
+.doctor-panel { background:#fff; border:1px solid #e2e7ee; border-radius:14px; box-shadow:0 3px 14px rgba(25,45,75,.04); overflow:hidden; }
+.doctor-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid #edf0f4; }
+.doctor-title { margin:0; font-size:19px; color:#172b4d; }
+.doctor-subtitle { margin:5px 0 0; color:#6a7687; font-size:12px; }
+.doctor-online { display:inline-block; width:8px; height:8px; border-radius:50%; background:#3370ff; margin-right:8px; }
+.doctor-history { background:#fff; border:1px solid #dce2eb; color:#52627a; border-radius:6px; padding:7px 10px; cursor:pointer; white-space:nowrap; }
+.doctor-messages { height:300px; min-height:180px; overflow-y:auto; padding:20px; scroll-behavior:smooth; }
+.doctor-message { max-width:90%; margin-bottom:18px; }
+.doctor-message-name { font-size:11px; color:#8792a2; margin-bottom:5px; }
+.doctor-message-body { font-size:14px; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; color:#26364d; background:#f4f7fb; border-radius:0 10px 10px 10px; padding:11px 14px; }
+.doctor-message.from-user { margin-left:auto; }
+.from-user .doctor-message-name { text-align:right; }
+.from-user .doctor-message-body { background:#eaf1ff; border-radius:10px 0 10px 10px; }
+.doctor-shortcuts { display:flex; flex-wrap:wrap; gap:7px; padding:0 20px 14px; }
+.doctor-shortcut { border:1px solid #e0e7f0; border-radius:16px; padding:6px 11px; background:#fff; color:#536984; font-size:12px; cursor:pointer; }
+.doctor-composer { padding:14px 20px 15px; border-top:1px solid #edf0f4; background:#fcfdff; }
+.doctor-input { display:block; width:100%; resize:vertical; min-height:72px; max-height:200px; border:1px solid #d8e1ee; border-radius:8px; padding:10px 12px; font:14px/1.6 'Microsoft YaHei',sans-serif; background:#fff; color:#26364d; }
+.doctor-input:focus { outline:2px solid #dce8ff; border-color:#3370ff; }
+.doctor-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+.doctor-upload { color:#52627a; font-size:12px; cursor:pointer; }
+.doctor-upload input { max-width:240px; font-size:12px; }
+.doctor-send { margin-left:auto; padding:8px 18px!important; font-size:14px!important; }
+.doctor-stop { padding:8px 12px; border:1px solid #dce2eb; border-radius:7px; background:#fff; color:#637086; cursor:pointer; }
+.doctor-panel button:disabled,.doctor-upload input:disabled { opacity:.45; cursor:not-allowed; }
+.doctor-status { min-height:20px; margin:9px 0 0; color:#65778f; font-size:12px; line-height:1.6; }
+.doctor-footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:10px 20px; color:#8c97a5; font-size:11px; border-top:1px solid #edf0f4; }
+.doctor-footer a { color:#657b9b; text-decoration:none; }
+.doctor-local-help { padding:11px 20px; border-top:1px solid #edf0f4; color:#65778f; font-size:12px; line-height:1.8; }
+.doctor-local-help summary { cursor:pointer; }
+.doctor-local-help h2 { color:#405774; font-size:13px; margin:14px 0 5px; }
+.doctor-local-help ol { margin:0; padding-left:20px; }
+.doctor-local-help a { color:#3370ff; }
+.admin-logbox { background:#1e1e1e; color:#d4d4d4; border-radius:8px; padding:14px; height:65vh; min-height:260px; overflow-y:auto; font:12px/1.7 Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+.log-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+@media(max-width:600px) { .doctor-header,.doctor-composer { padding:14px; } .doctor-messages { padding:14px; height:280px; } .doctor-shortcuts { padding-left:14px; padding-right:14px; } .doctor-message { max-width:96%; } .doctor-title { font-size:17px; } .doctor-history { font-size:11px; } }

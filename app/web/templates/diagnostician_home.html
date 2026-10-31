@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>order-bot 订单自动整理</title>
+<link rel="stylesheet" href="/static/diagnostician.css">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", sans-serif; margin: 0; background: #f5f6f7; }
+  .target-banner { background: #fff3cd; color: #856404; text-align: center;
+                   padding: 4px; font-size: 13px; }
+  .ip-banner { background: #f8d7da; color: #721c24; padding: 10px 20px; font-size: 14px;
+               display: none; }
+  .ip-banner.show { display: flex; align-items: center; gap: 12px; }
+  .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+  .actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: 15px;
+         cursor: pointer; background: #3370ff; color: #fff; }
+  .btn.secondary { background: #fff; color: #333; border: 1px solid #ddd; }
+  .btn.off { background: #f0f0f0; color: #888; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+           gap: 12px; margin-bottom: 20px; }
+  .card { background: #fff; border-radius: 8px; padding: 14px;
+          box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card .label { font-size: 12px; color: #999; }
+  .card .value { font-size: 20px; font-weight: bold; margin-top: 4px; }
+  .value.ok { color: #1a7f37; } .value.bad { color: #d32f2f; }
+  .card .mini { font-size: 11px; color: #bbb; margin-top: 2px; }
+  button.small { padding: 2px 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+{% if target == 'test' %}
+<div class="target-banner">当前为【测试】模式：写测试文件夹、发测试群</div>
+{% endif %}
+<div class="ip-banner" id="ipBanner">
+  <span>⚠ 企业微信因可信 IP 拒绝了拉取（当前公网 IP：<b id="ipNew"></b>）。请到管理后台更新可信 IP，完成后点「我已更新」。</span>
+  <button class="small" onclick="copyIp()">复制 IP</button>
+</div>
+<div class="container">
+  <div class="actions">
+    <button class="btn" onclick="manualBatch()">现在输出临时订单</button>
+    <button class="btn secondary" id="scheduleBtn" onclick="toggleSchedule()">定时发送</button>
+    <button class="btn secondary" onclick="location.href='{{ admin_url }}'">管理后台</button>
+  </div>
+  <div class="cards" id="cards"></div>
+  <section class="doctor-panel" id="diagnostician" aria-label="诊断师聊天">
+    <div class="doctor-header">
+      <div><h1 class="doctor-title"><span class="doctor-online"></span>诊断师</h1>
+        <p class="doctor-subtitle">有问题直接问，我来帮你查原因、看订单</p></div>
+      <button type="button" class="doctor-history" id="doctorHistory">查看历史记录</button>
+    </div>
+    <div class="doctor-messages" id="doctorMessages" role="log" aria-live="polite" aria-label="诊断对话"></div>
+    <div class="doctor-shortcuts" aria-label="常用问题">
+      <button type="button" class="doctor-shortcut" data-doctor-prompt="检查一下现在的运行情况">检查运行情况</button>
+      <button type="button" class="doctor-shortcut" data-doctor-prompt="今天为什么没有发送订单？">为什么没发单</button>
+      <button type="button" class="doctor-shortcut" data-doctor-prompt="表里某格有误，请帮我定位表格、日期sheet、行列，再确认正确写法">指出某格错误</button>
+      <button type="button" class="doctor-shortcut" data-doctor-prompt="请说明DeepSeek充值和企业微信可信IP的操作步骤">充值 / 可信 IP 指引</button>
+    </div>
+    <form class="doctor-composer" id="doctorForm">
+      <label for="doctorInput" class="doctor-subtitle">告诉我遇到的问题</label>
+      <textarea id="doctorInput" class="doctor-input" maxlength="6000" rows="2" placeholder="例如：10.27 第12行数量应该是6米；或问我今天运行是否正常"></textarea>
+      <div class="doctor-toolbar">
+        <label class="doctor-upload">上传金标 <input type="file" id="doctorUpload" accept=".xlsx,.csv" aria-label="上传金标 xlsx 或 csv" disabled></label>
+        <button type="button" class="doctor-stop" id="doctorStop" disabled>停止</button>
+        <button type="submit" class="btn doctor-send" id="doctorSend" disabled>发送</button>
+      </div>
+      <p class="doctor-status" id="doctorStatus" role="status" aria-live="polite">正在恢复会话…</p>
+    </form>
+    <details class="doctor-local-help" id="doctorGoldResults">
+      <summary>金标对照结果与待核备注</summary>
+      <p>首次结果与修后结果分开保留；最多核对三轮，缺证据不计为正确。</p>
+      <button type="button" id="doctorLoadGold">查看当前会话对照结果</button>
+      <div id="doctorGoldTable" role="status">尚未读取对照结果。</div>
+    </details>
+    <details class="doctor-local-help" id="doctorLocalHelp">
+      <summary>充值 / 可信 IP 操作说明（模型不可用时也能查看）</summary>
+      <h2>DeepSeek 余额与充值</h2>
+      <ol>
+        <示例收件人8>先在<a href="/admin/status">运行状态</a>查看实际余额或错误原因。网络超时、鉴权失败与余额不足分别处理。</示例收件人8>
+        <示例收件人8>需要充值时，由账号所有人打开<a href="https://platform.deepseek.com/" target="_blank" rel="noopener noreferrer">DeepSeek 官方平台</a>，登录与本软件 API Key 对应的账号。</示例收件人8>
+        <示例收件人8>在平台余额/充值页面选择金额并完成支付。无需在聊天里发送密码、API Key 或支付信息。</示例收件人8>
+        <示例收件人8>完成后在此输入“已充值，检查一次”；诊断师会按当前配置复查一次，并显示结果。</示例收件人8>
+      </ol>
+      <h2>企业微信可信 IP</h2>
+      <ol>
+        <示例收件人8>出现企业微信白名单拒绝证据（301042/10009）时，打开<a href="/admin/ip">IP 白名单</a>查看并复制本次实际出口 IP。只看到 IP 变化，不能据此判定过期。</示例收件人8>
+        <示例收件人8>由管理员登录企业微信后台，进入“管理工具 → 会话内容存档 → 可信 IP”，添加本次 IP 并保存。</示例收件人8>
+        <示例收件人8>回到 IP 白名单页，点“我已更新可信 IP”，程序会试拉一次并显示是否恢复。</示例收件人8>
+        <示例收件人8>若是网络断开，先恢复本机网络或原有代理连接；页面没有当前 IP 时不猜 IP、不反复重试。</示例收件人8>
+      </ol>
+    </details>
+    <div class="doctor-footer"><span>记录自动保存 · 缺证据会保留待核并停止重复检查</span><a href="/admin/logs">查看运行日志 →</a></div>
+  </section>
+</div>
+<script src="/static/diagnostician.js" defer></script>
+<script>
+async function refresh() {
+  const s = await (await fetch('/api/status')).json();
+  const card = (label, value, cls='', mini='') =>
+    `<div class="card"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="mini">${mini}</div></div>`;
+  let ipCard;
+  if (!s.network_ok) ipCard = card('公网 IP', '网络断开', 'bad');
+  else if (s.ip_ok === true) ipCard = card('公网 IP', s.ip, 'ok', '已登记');
+  else if (s.ip_ok === false) ipCard = card('公网 IP', s.ip, 'bad', '需更新可信 IP');
+  else ipCard = card('公网 IP', '检测中');
+  const reviewDetail = Number.isInteger(s.pending_messages)
+    ? `订单 ${s.pending_orders} · 失败消息 ${s.pending_messages}` +
+      (s.pending_unknown ? ` · 异常记录 ${s.pending_unknown}` : '')
+    : '订单记录；失败消息待核实';
+  document.getElementById('cards').innerHTML =
+    ipCard +
+    card('上次拉取', s.last_pull) +
+    card('今天消息', s.today_msgs) +
+    card('未整理', s.unbatched) +
+    card('待核（全部记录）', s.pending, '', reviewDetail) +
+    card('定时', s.next_run, '', s.master_on ? '已开启' : '已关闭');
+  document.getElementById('ipBanner').classList.toggle('show', s.ip_ok === false);
+  if (s.ip) document.getElementById('ipNew').textContent = s.ip;
+  const btn = document.getElementById('scheduleBtn');
+  btn.textContent = (s.master_on ? '定时发送 开' : '定时发送 关') + '（' + s.next_run + '）';
+  btn.classList.toggle('off', !s.master_on);
+}
+async function manualBatch() {
+  const clickId = crypto.randomUUID();
+  // 一次点击的网络重试沿用同一标识，下一次点击生成新标识。
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch('/api/batch/manual', {
+        method: 'POST', headers: {'Idempotency-Key': clickId}
+      });
+      if (!response.ok) throw new Error('请求未完成');
+      const r = await response.json();
+      if (!r.ok) alert(r.msg);
+      return;
+    } catch (error) {
+      if (attempt === 1) alert('发送请求未确认，请稍后查看日志。');
+    }
+  }
+}
+async function toggleSchedule() {
+  await fetch('/api/schedule/toggle', {method:'POST'});
+  refresh();
+}
+function copyIp() {
+  navigator.clipboard.writeText(document.getElementById('ipNew').textContent);
+}
+refresh();
+// 状态轮询：10 秒；页面隐藏（最小化/切后台）时暂停，减轻嵌入 webview 负担（#0b）
+let refreshTimer = setInterval(refresh, 10000);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearInterval(refreshTimer);
+  } else {
+    refresh();
+    refreshTimer = setInterval(refresh, 10000);
+  }
+});
+</script>
+</body>
+</html>

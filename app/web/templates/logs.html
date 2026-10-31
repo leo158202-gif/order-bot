@@ -1,0 +1,11 @@
+<link rel="stylesheet" href="/static/diagnostician.css">
+<div class="card">
+  <h2 style="margin-top:0">运行日志</h2>
+  <div class="log-toolbar">
+    <button type="button" id="logPause">暂停接收</button>
+    <span id="logState" class="muted" role="status">正在连接…</span>
+    <span class="muted">继续接收时显示最近日志；页面在后台时暂停连接。</span>
+  </div>
+  <div id="adminLogs" class="admin-logbox" aria-label="运行日志"></div>
+</div>
+<script src="/static/diagnostician.js" defer></script>

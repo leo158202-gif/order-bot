@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "source_globs": [
+    "app/**/*.py",
+    "app/web/templates/*.html",
+    "app/web/static/*.js",
+    "app/web/static/*.css",
+    "app/diagnostician/help/*.json"
+  ],
+  "source_files": [
+    "rules/rules.yaml",
+    "scripts/gold_identity.py",
+    "scripts/gold_reconciliation.py",
+    "scripts/replay_gold.py",
+    "scripts/resident_maintenance_plan.py",
+    "worker-releases/baseline/entry.py",
+    "worker-releases/baseline/manifest.json",
+    "worker-releases/baseline/business/formatting.py",
+    "vendor/wecom_sdk/bin/WeWorkFinanceSdk.dll",
+    "vendor/wecom_sdk/bin/libcrypto-3-x64.dll",
+    "vendor/wecom_sdk/bin/libssl-3-x64.dll",
+    "vendor/wecom_sdk/bin/libcurl-x64.dll",
+    "scripts/source_pairing_guard.py"
+  ],
+  "runtime_files": [
+    "python.exe",
+    "pythonw.exe",
+    "python3.dll",
+    "python312.dll",
+    "vcruntime140.dll",
+    "vcruntime140_1.dll",
+    "LICENSE.txt"
+  ],
+  "excluded_distributions": [
+    "pip"
+  ],
+  "prerequisites": [
+    "MicrosoftEdgeWebview2Setup.exe",
+    "vc_redist.x64.exe"
+  ],
+  "license_files": [
+    "packaging/licenses/OpenSSL-LICENSE.txt",
+    "packaging/licenses/curl-COPYING.txt"
+  ],
+  "official_sources": {
+    "python": "https://www.python.org/downloads/windows/",
+    "inno": "https://jrsoftware.org/isdl.php",
+    "webview2": "https://developer.microsoft.com/microsoft-edge/webview2/",
+    "vc_runtime": "https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist"
+  }
+}

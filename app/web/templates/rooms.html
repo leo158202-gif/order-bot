@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>群管理 - order-bot</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; background: #f5f6f7; }
+  h1 { font-size: 20px; }
+  .room { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .room-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .name { font-weight: bold; font-size: 16px; }
+  .roomid { color: #999; font-size: 12px; font-family: monospace; }
+  .badge { padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+  .on { background: #d4f7dc; color: #1a7f37; }
+  .off { background: #eee; color: #888; }
+  .samples { margin-top: 10px; font-size: 13px; color: #555; }
+  .samples div { padding: 3px 0; border-bottom: 1px dashed #eee; }
+  .samples .t { color: #999; font-size: 12px; margin-right: 6px; }
+  button { padding: 4px 14px; border: none; border-radius: 4px; cursor: pointer; }
+  .btn-enable { background: #3370ff; color: #fff; }
+  .btn-disable { background: #f0f0f0; color: #333; }
+  input[type=text] { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; }
+  form.inline { display: inline; }
+</style>
+</head>
+<body>
+<h1>群管理</h1>
+<p style="color:#888">拉到过的群都会列在这里。勾选「启用收录」的群，消息才会被整理成订单。</p>
+{% for r in rooms %}
+<div class="room">
+  <div class="room-header">
+    <span class="name">{{ r.name }}</span>
+    <span class="roomid">{{ r.roomid }}</span>
+    <span class="badge {{ 'on' if r.enabled else 'off' }}">{{ '已启用' if r.enabled else '未启用' }}</span>
+    <span style="color:#999;font-size:12px">最近消息 {{ r.last_msg_at }}</span>
+    <form class="inline" method="post" action="/rooms/{{ r.roomid }}/toggle">
+      <button class="{{ 'btn-disable' if r.enabled else 'btn-enable' }}">
+        {{ '停用' if r.enabled else '启用收录' }}
+      </button>
+    </form>
+  </div>
+  <div class="room-header" style="margin-top:8px">
+    <form class="inline" method="post" action="/rooms/{{ r.roomid }}/rename">
+      <input type="text" name="name" placeholder="给这个群起个名字" value="{{ r.name if r.name != '(未命名)' else '' }}">
+      <button type="submit">保存名称</button>
+    </form>
+  </div>
+  {% if r.samples %}
+  <div class="samples">
+    {% for s in r.samples %}
+    <div><span class="t">{{ s.time }}</span>{{ s.sender }}：{{ s.content }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<p>还没有拉到任何群消息。等群里有人发消息后会出现在这里。</p>
+{% endfor %}
+</body>
+</html>
